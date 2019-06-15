@@ -1,21 +1,19 @@
+################################################ WP Extract Blog Posts
+
+############ IMPORTS
 import sys
 import os
 import os.path
-import re
-import unicodedata
-import time
-import datetime
+import urllib
 import urllib2
 import json
-import sched
-import uuid
-from enum import Enum
 
-# WP Get Blog ################################################
-
-############ CONSTANTS
+############ VARIABLES
 
 BLOG_URL = ''
+OUTPUT_DIR = os.getcwd() + '/output'
+PYTHON_ENCODING = 'utf-8'
+COUNTER = 0
 
 # Shell parameter: run mode -> dev mode (reset all database!)
 if len(sys.argv) > 1:
@@ -34,38 +32,41 @@ def httpGetJson(url):
 def getPosts():
     return httpGetJson(BLOG_URL + '/wp-json/wp/v2/posts?per_page=100')
 
-def getPostContents(response):
-    count = 4
-    # get featured images links and blog contents
-    # featuredImagesLinks = []
-    blogContents = []
-    for val in response:
-        if (count > 0):
-            try:
-                # featuredImagesLinks.append(val['_links']['wp:featuredmedia'][0]['href'])
-                blogContents.append(
-                    {
-                        "featuredImage": getFeaturedImagesLinkResolved(val['_links']['wp:featuredmedia'][0]['href']),
-                        "content": val['content']['rendered']
-                    }
-                )
-                count = count - 1
-            except:
-                pass
-    print json.dumps(blogContents)
-    # resolve featured images links to real image URLs
-    # featuredImagesLinksResolved = []
-    # for val in featuredImagesLinks:
-            # try:
-                # featuredImagesLinksResolved.append(getFeaturedImagesLinkResolved(val))
-            # except:
-                # pass
-    # print featuredImagesLinksResolved
-
 def getFeaturedImagesLinkResolved(url):
     mediaData = httpGetJson(url)
     return mediaData['source_url']
 
+def getPostContents(response):
+    # get featured images links and blog contents
+    for val in response:
+        global COUNTER
+
+        try:
+            blogTitle = val['title']['rendered'].encode( PYTHON_ENCODING )
+            featuredImageUrl = getFeaturedImagesLinkResolved(val['_links']['wp:featuredmedia'][0]['href'])
+            print featuredImageUrl
+            blogContent = val['content']['rendered'].encode( PYTHON_ENCODING )
+
+            currentDir = OUTPUT_DIR + '/' + blogTitle
+            os.mkdir( currentDir )
+
+            # download and save blogpost's featured image
+            urllib.urlretrieve( featuredImageUrl, currentDir + '/' + blogTitle + '.jpg' )
+
+            with open( currentDir + '/' + blogTitle + '.html', 'w+' ) as f:
+                f.write( '<h1>' + blogTitle + '</h1>' + blogContent )
+                f.close()
+
+            COUNTER += 1
+
+        except IOError:
+            raise IOError
+
+def run():
+    print '### WP EXTRACT BLOG POSTS: running...'
+    getPostContents( getPosts() )
+    print '### WP EXTRACT BLOG POSTS: Successfully extracted ' + str(COUNTER) + ' blogposts from ' + BLOG_URL
+
 ############ EXECUTE
 
-getPostContents( getPosts() )
+run()
