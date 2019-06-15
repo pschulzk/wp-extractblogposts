@@ -26,35 +26,46 @@ else:
 
 ############ METHODS
 
-def httpGet(url):
+def httpGetJson(url):
     response_body = urllib2.urlopen( url ).read()
     response_dictionary = json.loads( response_body )
     return response_dictionary
 
 def getPosts():
-    return httpGet(BLOG_URL + '/wp-json/wp/v2/posts?per_page=100&author=1')
+    return httpGetJson(BLOG_URL + '/wp-json/wp/v2/posts?per_page=100')
 
-def getFeaturedImagesLinks(response):
-    featuredImagesLinks = []
+def getPostContents(response):
+    count = 4
+    # get featured images links and blog contents
+    # featuredImagesLinks = []
+    blogContents = []
     for val in response:
-        try:
-            featuredImagesLinks.append(val['_links']['wp:featuredmedia'][0]['href'])
-        except:
-            pass
-
-    featuredImagesLinksResolved = []
-    for val in featuredImagesLinks:
+        if (count > 0):
             try:
-                featuredImagesLinksResolved.append(getFeaturedImagesLinkResolved(val))
+                # featuredImagesLinks.append(val['_links']['wp:featuredmedia'][0]['href'])
+                blogContents.append(
+                    {
+                        "featuredImage": getFeaturedImagesLinkResolved(val['_links']['wp:featuredmedia'][0]['href']),
+                        "content": val['content']['rendered']
+                    }
+                )
+                count = count - 1
             except:
                 pass
-    print featuredImagesLinksResolved
+    print json.dumps(blogContents)
+    # resolve featured images links to real image URLs
+    # featuredImagesLinksResolved = []
+    # for val in featuredImagesLinks:
+            # try:
+                # featuredImagesLinksResolved.append(getFeaturedImagesLinkResolved(val))
+            # except:
+                # pass
+    # print featuredImagesLinksResolved
 
 def getFeaturedImagesLinkResolved(url):
-    mediaData = httpGet(url)
-    print mediaData['source_url']
+    mediaData = httpGetJson(url)
     return mediaData['source_url']
 
 ############ EXECUTE
 
-getFeaturedImagesLinks( getPosts() )
+getPostContents( getPosts() )
