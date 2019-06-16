@@ -8,22 +8,18 @@ import urllib
 import urllib2
 
 ############ VARIABLES
-
 BLOG_URL = ''
 OUTPUT_DIR = os.getcwd() + '/output'
 PYTHON_ENCODING = 'utf-8'
 COUNTER = 0
 
 ############ SHELL PARAMETER
-
 if len( sys.argv ) > 1:
     BLOG_URL = sys.argv[ 1 ]
 else:
     raise ValueError( 'Missing parameter: WordPress blog domain. E. g. "https://myblog.com"' )
 
-
 ############ METHODS
-
 def httpGetJson( url ):
     response_body = urllib2.urlopen( url ).read()
     response_dictionary = json.loads( response_body )
@@ -33,8 +29,8 @@ def getPosts():
     return httpGetJson( BLOG_URL + '/wp-json/wp/v2/posts?per_page=100' )
 
 def getFeaturedImagesLinkResolved( url ):
-    mediaData = httpGetJson(url)
-    return mediaData['source_url']
+    mediaData = httpGetJson( url )
+    return mediaData[ 'source_url' ]
 
 def getPostContents( response ):
     # get featured images links and blog contents
@@ -72,5 +68,4 @@ def run():
     print '### WP EXTRACT BLOG POSTS: Successfully extracted ' + str( COUNTER ) + ' blogposts from ' + BLOG_URL
 
 ############ EXECUTE
-
 run()
