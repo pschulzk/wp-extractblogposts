@@ -1,12 +1,12 @@
 ################################################ WP Extract Blog Posts
 
 ############ IMPORTS
-import sys
+import json
 import os
-import os.path
+# import os.path
+import sys
 import urllib
 import urllib2
-import json
 
 ############ VARIABLES
 
@@ -43,24 +43,28 @@ def getPostContents(response):
 
         try:
             blogTitle = val['title']['rendered'].encode( PYTHON_ENCODING )
-            featuredImageUrl = getFeaturedImagesLinkResolved(val['_links']['wp:featuredmedia'][0]['href'])
-            print featuredImageUrl
             blogContent = val['content']['rendered'].encode( PYTHON_ENCODING )
 
             currentDir = OUTPUT_DIR + '/' + blogTitle
             os.mkdir( currentDir )
 
-            # download and save blogpost's featured image
-            urllib.urlretrieve( featuredImageUrl, currentDir + '/' + blogTitle + '.jpg' )
-
             with open( currentDir + '/' + blogTitle + '.html', 'w+' ) as f:
                 f.write( '<h1>' + blogTitle + '</h1>' + blogContent )
                 f.close()
 
+            # download and save blogpost's featured image if exist
+            try:
+                featuredImageUrl = val['_links']['wp:featuredmedia'][0]['href']
+                featuredImagesLinkResolved = getFeaturedImagesLinkResolved( featuredImageUrl )
+                urllib.urlretrieve( featuredImagesLinkResolved, currentDir + '/' + blogTitle + '.jpg' )
+            except:
+                pass
+
+            print '### WP EXTRACT BLOG POSTS: downloaded "' + blogTitle + '"'
             COUNTER += 1
 
         except IOError:
-            raise IOError
+            pass
 
 def run():
     print '### WP EXTRACT BLOG POSTS: running...'
