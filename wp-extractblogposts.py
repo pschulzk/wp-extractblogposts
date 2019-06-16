@@ -14,7 +14,8 @@ OUTPUT_DIR = os.getcwd() + '/output'
 PYTHON_ENCODING = 'utf-8'
 COUNTER = 0
 
-# Shell parameter: run mode -> dev mode (reset all database!)
+############ SHELL PARAMETER
+
 if len( sys.argv ) > 1:
     BLOG_URL = sys.argv[ 1 ]
 else:
